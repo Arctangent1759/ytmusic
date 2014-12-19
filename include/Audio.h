@@ -15,6 +15,7 @@ class Audio {
     void Enqueue(std::string url);
     void Play();
     void Pause();
+    void Skip();
     void ClearQueue();
     ~Audio();
   private:
@@ -24,7 +25,6 @@ class Audio {
     std::mutex pipeline_lock;
     std::queue<std::string> song_queue;
     std::thread player_thread;
-    URLDecoder decoder;
 
     
 };

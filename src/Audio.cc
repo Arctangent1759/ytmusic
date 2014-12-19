@@ -15,7 +15,6 @@ void play_song(GstElement* );
 Audio::Audio() {
   this->running = true;
   this->player_thread = std::thread(&Audio::player, this);
-  this->decoder = ytmusic::URLDecoder();
 }
 
 void Audio::Enqueue(std::string url) {
@@ -34,11 +33,18 @@ void Audio::Play() {
 
 void Audio::Pause() {
   this->pipeline_lock.lock();
-  GstStateChangeReturn ret = gst_element_set_state (this->pipeline, GST_STATE_PLAYING);
+  GstStateChangeReturn ret = gst_element_set_state (this->pipeline, GST_STATE_PAUSED);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_printerr ("Unable to set the pipeline to the playing state.\n");
     gst_object_unref (pipeline);
   }
+  this->pipeline_lock.unlock();
+}
+
+void Audio::Skip() {
+  this->pipeline_lock.lock();
+  GstBus* bus = gst_element_get_bus(this->pipeline);
+  gst_bus_post(bus, gst_message_new_eos((GstObject*)bus));
   this->pipeline_lock.unlock();
 }
 
@@ -60,6 +66,7 @@ void Audio::player() {
   std::string song_url;
   while(this->running) {
     if (!this->song_queue.empty()) {
+      ytmusic::URLDecoder decoder = ytmusic::URLDecoder();
       song_url = song_queue.front();
       song_url = decoder.DecodeURL(song_url);
       song_queue.pop();
