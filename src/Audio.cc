@@ -1,14 +1,21 @@
-#include "Audio.h"
 #include <gst/gst.h>
-#include <string>
 #include <queue>
+#include <string>
 #include <thread>
+
+#include "Audio.h"
+#include "URLDecoder.h"
 
 namespace ytmusic {
 namespace player {
 
+GstElement* init_song(std::string);
+void play_song(GstElement* );
+
 Audio::Audio() {
-  this->player_thread = std::thread(player);
+  this->running = true;
+  this->player_thread = std::thread(&Audio::player, this);
+  this->decoder = ytmusic::URLDecoder();
 }
 
 void Audio::Enqueue(std::string url) {
@@ -42,17 +49,22 @@ void Audio::ClearQueue() {
 }
 
 Audio::~Audio() {
-  this->ClearAudio();
-  gst_bus_post(gst_element_get_bus(this->pipeline), gst_message_new_eos());
+  this->ClearQueue();
+  GstBus* bus = gst_element_get_bus(this->pipeline);
+  gst_bus_post(bus, gst_message_new_eos((GstObject*)bus));
+  this->running = false;
   this->player_thread.join();
 }
 
 void Audio::player() {
-  while(true) {
+  std::string song_url;
+  while(this->running) {
     if (!this->song_queue.empty()) {
-      std::string song_url = song_queue.pop();
+      song_url = song_queue.front();
+      song_url = decoder.DecodeURL(song_url);
+      song_queue.pop();
       this->pipeline_lock.lock();
-      init_song(this->pipeline);
+      this->pipeline = init_song(song_url);
       this->pipeline_lock.unlock();
       play_song(this->pipeline);
     }
@@ -103,35 +115,32 @@ void play_song(GstElement* pipeline) {
   gst_element_set_state (pipeline, GST_STATE_NULL);
 }
 
-int init_song(GstElement* pipeline) {
+GstElement* init_song(std::string song_url) {
   gst_init (0, NULL);
     
   GstElement* source = gst_element_factory_make ("uridecodebin", "source");
   GstElement* convert = gst_element_factory_make ("audioconvert", "convert");
   GstElement* sink = gst_element_factory_make ("autoaudiosink", "sink");
-  pipeline = gst_pipeline_new ("test-pipeline");
+  GstElement* pipeline = gst_pipeline_new ("test-pipeline");
   if (!pipeline || !source || !convert || !sink) {
     g_printerr ("Not all elements could be created.\n");
-    return -1;
   }
    
   gst_bin_add_many (GST_BIN (pipeline), source, convert , sink, NULL);
   if (!gst_element_link (convert, sink)) {
     g_printerr ("Elements could not be linked.\n");
     gst_object_unref (pipeline);
-    return -1;
   }
 
-  g_object_set (source, "uri", url.c_str(), NULL);
+  g_object_set (source, "uri", song_url.c_str(), NULL);
   g_signal_connect (source, "pad-added", G_CALLBACK (pad_added_handler), convert);
 
   GstStateChangeReturn ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_printerr ("Unable to set the pipeline to the playing state.\n");
     gst_object_unref (pipeline);
-    return -1;
   }
-  return 0
+  return pipeline;
 }
 
 void pad_added_handler (GstElement *src, GstPad *new_pad, GstElement* convert) {
