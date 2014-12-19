@@ -4,6 +4,8 @@
 #include <mutex>
 #include <thread>
 
+#include "URLDecoder.h"
+
 namespace ytmusic {
 namespace player {
 
@@ -18,9 +20,12 @@ class Audio {
   private:
     void player();
     GstElement* pipeline;
+    bool running;
     std::mutex pipeline_lock;
     std::queue<std::string> song_queue;
     std::thread player_thread;
+    URLDecoder decoder;
+
     
 };
 
