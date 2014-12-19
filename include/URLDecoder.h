@@ -4,6 +4,9 @@
 #include <Python.h>
 #include <string>
 
+#ifndef URLDECODER_H
+#define URLDECODER_H
+
 namespace ytmusic {
 
 // Object for decoding live stream URLs. Only ever instantiate one of these.
@@ -20,3 +23,5 @@ class URLDecoder {
 };
 
 } //  namespace ytmusic
+
+#endif  // URLDECODER_H
