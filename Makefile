@@ -6,7 +6,7 @@ TARGET := bin/runner
 SRCEXT := cc
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-CFLAGS := -g # -Wall
+CFLAGS := -std=c++11 -g # -Wall
 LIB := -pthread -L lib `pkg-config --cflags --libs python2` -Wl,-rpath=/opt/gstreamer-sdk/lib `pkg-config --cflags --libs gstreamer-0.10`
 INC := -I include
 
