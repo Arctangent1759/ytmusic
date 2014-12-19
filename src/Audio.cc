@@ -57,10 +57,11 @@ Audio::~Audio() {
 }
 
 void Audio::player() {
+  std::string song_url;
   while(this->running) {
     if (!this->song_queue.empty()) {
-      std::string song_url = song_queue.front();
-      std::string song_url = decoder.DecodeURL(song_url);
+      song_url = song_queue.front();
+      song_url = decoder.DecodeURL(song_url);
       song_queue.pop();
       this->pipeline_lock.lock();
       this->pipeline = init_song(song_url);
