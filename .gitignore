@@ -1,0 +1,7 @@
+build
+.archive
+lib/*
+
+bin/*
+
+.DS_Store
