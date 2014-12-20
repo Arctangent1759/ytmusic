@@ -6,6 +6,9 @@
 
 #include "URLDecoder.h"
 
+#ifndef AUDIO_H
+#define AUDIO_H
+
 namespace ytmusic {
 namespace player {
 
@@ -25,10 +28,11 @@ class Audio {
     std::mutex pipeline_lock;
     std::queue<std::string> song_queue;
     std::thread player_thread;
-
-    
 };
 
 void pad_added_handler(GstElement *src, GstPad *new_pad, GstElement* convert);
+
 }  // namespace player
 }  // namespace ytmusic
+
+#endif  // AUDIO_H

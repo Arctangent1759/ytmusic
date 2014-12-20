@@ -19,7 +19,6 @@ std::string echo(std::vector<std::string> request){
 using ytmusic::player::Audio;
 
 int main() {
-  ytmusic::URLDecoder decoder;
   Audio songs;
   songs.Enqueue("https://www.youtube.com/watch?v=hHkKJfcBXcw");
   songs.Enqueue("https://www.youtube.com/watch?v=DazKKUShotM");

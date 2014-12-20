@@ -1,0 +1,20 @@
+package datastore;
+
+message Datastore {
+  message Song {
+    required string title = 1;
+    required string yt_hash = 2;
+    optional string artist = 3;
+    optional string album = 4;
+  }
+  message Playlist {
+    required string name = 1;
+    repeated int32 songs = 2;
+  }
+  repeated Song song = 1;
+  repeated Playlist playlist = 1;
+}
+
+message AddressBook {
+  repeated Person person = 1;
+}

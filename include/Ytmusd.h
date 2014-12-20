@@ -1,3 +1,6 @@
+#include <memory>
+
+#include "Audio.h"
 #include "SocketServer.h"
 #include "RequestDispatcher.h"
 
@@ -10,6 +13,16 @@ namespace ytmusd {
 class Ytmusd {
   public:
     Ytmusd();
+    void Play(int index);
+    void Play(std::vector<int> indices);
+    void Enqueue(int index);
+    void Next();
+    void Prev();
+  private:
+    void ClearQueue();
+    std::vector<int> queue;
+    int now_playing;
+    ytmusic::player::Audio audio;
 };
 
 class YtmusdServer {
