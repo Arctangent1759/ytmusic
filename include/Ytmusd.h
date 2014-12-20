@@ -1,3 +1,6 @@
+#include "SocketServer.h"
+#include "RequestDispatcher.h"
+
 #ifndef YTMUSD_H
 #define YTMUSD_H
 
@@ -7,8 +10,17 @@ namespace ytmusd {
 class Ytmusd {
   public:
     Ytmusd();
+};
+
+class YtmusdServer {
+  public:
+    YtmusdServer(int port, int backlog, Ytmusd* ytmusd);
+    void Start();
   private:
-    int sockfd;
+    void InitHandlers();
+    std::unique_ptr<::ytmusic::util::SocketServer> server;
+    ::ytmusic::util::RequestDispatcher* dispatcher;
+    std::unique_ptr<Ytmusd> ytmusd;
 };
 
 }  // namespace ytmusd

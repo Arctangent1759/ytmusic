@@ -1,6 +1,7 @@
 #include "RequestDispatcher.h"
 
 #include <iostream>
+#include <re2/re2.h>
 
 using std::cout;
 using std::endl;
@@ -9,19 +10,15 @@ namespace ytmusic {
 namespace util {
 
 std::string RequestDispatcher::HandleRequest(std::string request) {
-  for (auto regex_handler_pair : this->handlers) {
-    std::smatch matches;
-    if (std::regex_match(request, matches, regex_handler_pair.first)) {
-      for(size_t i=0; i<matches.size(); ++i) {
-          cout << matches[i] << endl;
-      }
-      return regex_handler_pair.second(std::vector<std::string>());
+  for (auto pattern_handler_pair : this->handlers) {
+    if (RE2::FullMatch(request, pattern_handler_pair.first)) {
+      return pattern_handler_pair.second(request);
     }
   }
   return "ERROR: Could not find a handle request " + request;
 }
 void RequestDispatcher::RegisterHandler(std::string pattern, HandlerFunc handler) {
-  this->handlers.emplace_back(std::regex(pattern), handler);
+  this->handlers.emplace_back(pattern, handler);
 }
 
 }  // namespace util
