@@ -64,9 +64,9 @@ Audio::~Audio() {
 
 void Audio::player() {
   std::string song_url;
+  ytmusic::URLDecoder decoder;
   while(this->running) {
     if (!this->song_queue.empty()) {
-      ytmusic::URLDecoder decoder = ytmusic::URLDecoder();
       song_url = song_queue.front();
       song_url = decoder.DecodeURL(song_url);
       song_queue.pop();

@@ -20,6 +20,7 @@ class URLDecoder {
     ~URLDecoder();
   private:
     PyObject* pFunc;  // The python function being run by the decoder.
+    PyObject* pArgs;  // Arguments to pFunc.
 };
 
 } //  namespace ytmusic

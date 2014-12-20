@@ -6,6 +6,7 @@
 #include "Ytmusd.h"
 #include "SocketServer.h"
 #include "RequestDispatcher.h"
+#include "Audio.h"
 
 using ytmusic::util::RequestDispatcher;
 using std::cout;
@@ -18,9 +19,10 @@ std::string echo(std::vector<std::string> request){
 using ytmusic::player::Audio;
 
 int main() {
-  std::string song_url = "https://www.youtube.com/watch?v=kfchvCyHmsc";
+  ytmusic::URLDecoder decoder;
   Audio songs;
-  songs.Enqueue(song_url);
+  songs.Enqueue("https://www.youtube.com/watch?v=hHkKJfcBXcw");
+  songs.Enqueue("https://www.youtube.com/watch?v=DazKKUShotM");
   songs.Play();
   std::string line;
   std::getline(std::cin, line);

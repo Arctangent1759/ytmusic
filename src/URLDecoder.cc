@@ -22,7 +22,6 @@ std::string URLDecoder::DecodeURL(std::string url){
   PyObject* best_pStream = PyDict_GetItemString(pStreams,"best");
   PyObject* best_pStream_url = PyObject_GetAttrString(best_pStream,"url");
   std::string out = PyString_AsString(best_pStream_url);
-  Py_DECREF(pArgs);
   Py_DECREF(pValue);
   Py_DECREF(pStreams);
   Py_DECREF(best_pStream);
