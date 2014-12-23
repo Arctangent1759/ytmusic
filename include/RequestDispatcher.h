@@ -1,12 +1,12 @@
+#ifndef REQUESTDISPATCHER_H
+#define REQUESTDISPATCHER_H
+
 #include <functional>
 #include <string>
 #include <vector>
 #include <utility>
 
 #include "SocketServer.h"
-
-#ifndef REQUESTDISPATCHER_H
-#define REQUESTDISPATCHER_H
 
 namespace ytmusic {
 namespace util {

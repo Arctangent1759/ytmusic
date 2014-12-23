@@ -1,3 +1,6 @@
+#ifndef AUDIO_H
+#define AUDIO_H
+
 #include <queue>
 #include <string>
 #include <gst/gst.h>
@@ -5,9 +8,6 @@
 #include <thread>
 
 #include "URLDecoder.h"
-
-#ifndef AUDIO_H
-#define AUDIO_H
 
 namespace ytmusic {
 namespace player {
@@ -25,6 +25,7 @@ class Audio {
     void player();
     GstElement* pipeline;
     bool running;
+    bool started;
     std::mutex pipeline_lock;
     std::queue<std::string> song_queue;
     std::thread player_thread;

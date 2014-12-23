@@ -1,11 +1,11 @@
+#ifndef YTMUSD_H
+#define YTMUSD_H
+
 #include <memory>
 
 #include "Audio.h"
 #include "SocketServer.h"
 #include "RequestDispatcher.h"
-
-#ifndef YTMUSD_H
-#define YTMUSD_H
 
 namespace ytmusic {
 namespace ytmusd {

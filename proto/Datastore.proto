@@ -1,0 +1,19 @@
+package ytmusic;
+
+message Datastore_proto {
+  message Song {
+    required int32 primary_key = 1;
+    required string title = 2;
+    required string yt_hash = 3;
+    optional string artist = 4;
+    optional string album = 5;
+  }
+  message Playlist {
+    required int32 primary_key = 1;
+    required string name = 2;
+    repeated int32 song_key = 3;
+  }
+  required int32 next_primary_key = 1;
+  repeated Song song = 2;
+  repeated Playlist playlist = 3;
+}

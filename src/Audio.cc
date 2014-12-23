@@ -2,6 +2,7 @@
 #include <queue>
 #include <string>
 #include <thread>
+#include <chrono>
 
 #include "Audio.h"
 #include "URLDecoder.h"
@@ -14,6 +15,7 @@ void play_song(GstElement* );
 
 Audio::Audio() {
   this->running = true;
+  this->started = false;
   this->player_thread = std::thread(&Audio::player, this);
 }
 
@@ -22,13 +24,15 @@ void Audio::Enqueue(std::string url) {
 }
 
 void Audio::Play() {
-  this->pipeline_lock.lock();
-  GstStateChangeReturn ret = gst_element_set_state (this->pipeline, GST_STATE_PLAYING);
-  if (ret == GST_STATE_CHANGE_FAILURE) {
-    g_printerr ("Unable to set the pipeline to the playing state.\n");
-    gst_object_unref (pipeline);
+  if (this->started) {
+    this->pipeline_lock.lock();
+    GstStateChangeReturn ret = gst_element_set_state (this->pipeline, GST_STATE_PLAYING);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+      g_printerr ("Unable to set the pipeline to the playing state.\n");
+      gst_object_unref (pipeline);
+    }
+    this->pipeline_lock.unlock();
   }
-  this->pipeline_lock.unlock();
 }
 
 void Audio::Pause() {
@@ -65,6 +69,7 @@ Audio::~Audio() {
 void Audio::player() {
   std::string song_url;
   ytmusic::URLDecoder decoder;
+  this->started = true;
   while(this->running) {
     if (!this->song_queue.empty()) {
       song_url = song_queue.front();
@@ -74,6 +79,8 @@ void Audio::player() {
       this->pipeline = init_song(song_url);
       this->pipeline_lock.unlock();
       play_song(this->pipeline);
+    } else {
+      std::this_thread::sleep_for(std::chrono::milliseconds(25));
     }
   }
 }

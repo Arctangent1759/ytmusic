@@ -7,8 +7,10 @@
 #include "SocketServer.h"
 #include "RequestDispatcher.h"
 #include "Audio.h"
+#include "Datastore.h"
 
 using ytmusic::util::RequestDispatcher;
+using ytmusic::ytmusd::Datastore;
 using std::cout;
 using std::endl;
 
@@ -19,14 +21,23 @@ std::string echo(std::vector<std::string> request){
 using ytmusic::player::Audio;
 
 int main() {
+  Datastore ds("/tmp/ytmus.dat");
+  ds.AddSong("title", "yt_hash", "artist", "album");
+  std::vector<int> songs;
+  songs.push_back(1);
+  songs.push_back(2);
+  songs.push_back(3);
+  songs.push_back(4);
+  songs.push_back(5);
+  ds.AddPlaylist("playlist", songs);
+  /*
   Audio songs;
   songs.Enqueue("https://www.youtube.com/watch?v=hHkKJfcBXcw");
   songs.Enqueue("https://www.youtube.com/watch?v=DazKKUShotM");
   songs.Play();
   std::string line;
   std::getline(std::cin, line);
-  while(line.compare("q") != 0)
-  {
+  while(line.compare("q") != 0) {
     if (line.compare("play") == 0) {
       songs.Play();
     }
@@ -41,4 +52,5 @@ int main() {
     }
     std::getline(std::cin, line);
   }
+  */
 }

@@ -1,7 +1,7 @@
-#include <memory>
-
 #ifndef REQUESTHANDLER_H
 #define REQUESTHANDLER_H
+
+#include <memory>
 
 namespace ytmusic {
 namespace util {

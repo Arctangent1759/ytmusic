@@ -1,11 +1,11 @@
 // A wrapper for the python Livestreamer API. Decodes live stream URLs to
 // their raw forms.
 
-#include <Python.h>
-#include <string>
-
 #ifndef URLDECODER_H
 #define URLDECODER_H
+
+#include <Python.h>
+#include <string>
 
 namespace ytmusic {
 
