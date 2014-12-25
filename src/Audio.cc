@@ -17,6 +17,7 @@ Audio::Audio() {
   this->running = true;
   this->started = false;
   this->player_thread = std::thread(&Audio::player, this);
+  this->offset = 0;
 }
 
 void Audio::Enqueue(std::string url) {
@@ -56,6 +57,7 @@ void Audio::ClearQueue() {
   while(!this->song_queue.empty()) {
     this->song_queue.pop();
   }
+  this->offset = 0;
 }
 
 Audio::~Audio() {
@@ -64,6 +66,10 @@ Audio::~Audio() {
   gst_bus_post(bus, gst_message_new_eos((GstObject*)bus));
   this->running = false;
   this->player_thread.join();
+}
+
+int Audio::GetOffset() {
+  return this->offset;
 }
 
 void Audio::player() {
@@ -79,6 +85,7 @@ void Audio::player() {
       this->pipeline = init_song(song_url);
       this->pipeline_lock.unlock();
       play_song(this->pipeline);
+      this->offset += 1;
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(25));
     }

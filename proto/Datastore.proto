@@ -13,7 +13,8 @@ message Datastore_proto {
     required string name = 2;
     repeated int32 song_key = 3;
   }
-  required int32 next_primary_key = 1;
-  repeated Song song = 2;
-  repeated Playlist playlist = 3;
+  required int32 next_song_primary_key = 1;
+  required int32 next_playlist_primary_key = 2;
+  repeated Song song = 3;
+  repeated Playlist playlist = 4;
 }

@@ -20,8 +20,10 @@ class Audio {
     void Pause();
     void Skip();
     void ClearQueue();
+    int GetOffset();
     ~Audio();
   private:
+    int offset;
     void player();
     GstElement* pipeline;
     bool running;

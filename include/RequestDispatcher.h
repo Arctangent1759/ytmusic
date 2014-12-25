@@ -11,7 +11,7 @@
 namespace ytmusic {
 namespace util {
 
-typedef std::function<std::string(std::string)> HandlerFunc;
+typedef std::function<std::string(std::string, std::string)> HandlerFunc;
 
 class RequestDispatcher : public ytmusic::util::RequestHandler {
   public:

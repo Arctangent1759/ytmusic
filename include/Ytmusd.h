@@ -6,23 +6,30 @@
 #include "Audio.h"
 #include "SocketServer.h"
 #include "RequestDispatcher.h"
+#include "Datastore.h"
 
 namespace ytmusic {
 namespace ytmusd {
 
 class Ytmusd {
   public:
-    Ytmusd();
-    void Play(int index);
-    void Play(std::vector<int> indices);
-    void Enqueue(int index);
+    Ytmusd(std::string datastore_path);
+    void Play(int key);
+    void Play(std::vector<int> keys);
+    void PlayPlaylist(int key);
+    void Stop();
+    void Enqueue(int key);
     void Next();
     void Prev();
+    Datastore* GetDatastore();
+
   private:
-    void ClearQueue();
+    int GetNowPlayingIndex();
+    void Update();
     std::vector<int> queue;
     int now_playing;
     ytmusic::player::Audio audio;
+    std::unique_ptr<Datastore> datastore;
 };
 
 class YtmusdServer {
