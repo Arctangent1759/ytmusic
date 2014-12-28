@@ -68,9 +68,7 @@ Datastore::Datastore(std::string path) {
   return ::ytmusic::util::Status();
 }
 
-int Datastore::NumSongs() {
-  return this->datastore.song_size();
-}
+int Datastore::NumSongs() { return this->datastore.song_size(); }
 
 ::ytmusic::util::Status Datastore::SetSongTitle(int key, std::string title) {
   this->lock.lock();
@@ -116,7 +114,11 @@ int Datastore::NumSongs() {
     return status;
   }
 
-  this->GetSong(key)->set_artist(artist);
+  if (artist.empty()) {
+    this->GetSong(key)->clear_artist();
+  } else {
+    this->GetSong(key)->set_artist(artist);
+  }
 
   if (!this->Commit()) {
     fprintf(stderr, "Failed to commit changes to datastore.\n");
@@ -133,7 +135,11 @@ int Datastore::NumSongs() {
     return status;
   }
 
-  this->GetSong(key)->set_album(album);
+  if (album.empty()) {
+    this->GetSong(key)->clear_album();
+  } else {
+    this->GetSong(key)->set_album(album);
+  }
 
   if (!this->Commit()) {
     fprintf(stderr, "Failed to commit changes to datastore.\n");
@@ -145,13 +151,25 @@ int Datastore::NumSongs() {
 ::ytmusic::util::Status Datastore::DelSong(int key) {
   this->lock.lock();
 
-  this->datastore.mutable_song()->DeleteSubrange(this->SongIndexOfKey(key), 1);
+  int index = this->SongIndexOfKey(key);
+  if (index == -1) {
+    this->lock.unlock();
+    return ::ytmusic::util::Status(
+        "Key " + std::to_string(key) +
+        " does not refer to a song in the database.");
+  }
+  this->datastore.mutable_song()->DeleteSubrange(index, 1);
 
   if (!this->Commit()) {
     fprintf(stderr, "Failed to commit changes to datastore.\n");
   }
   this->lock.unlock();
   return ::ytmusic::util::Status();
+}
+
+::google::protobuf::RepeatedPtrField<ytmusic::Datastore_proto_Song>
+Datastore::GetSongs() {
+  return this->datastore.song();
 }
 
 ::ytmusic::Datastore_proto_Song* Datastore::GetSong(int key) {
@@ -190,10 +208,12 @@ int Datastore::NumSongs() {
   return ::ytmusic::util::Status();
 }
 
-int Datastore::NumPlaylists() {
-  return this->datastore.playlist_size();
-}
+int Datastore::NumPlaylists() { return this->datastore.playlist_size(); }
 
+::google::protobuf::RepeatedPtrField<ytmusic::Datastore_proto_Playlist>
+Datastore::GetPlaylists() {
+  return this->datastore.playlist();
+}
 
 ::ytmusic::Datastore_proto_Playlist* Datastore::GetPlaylist(int key) {
   int index = this->PlaylistIndexOfKey(key);
@@ -245,8 +265,14 @@ int Datastore::NumPlaylists() {
 ::ytmusic::util::Status Datastore::DelPlaylist(int key) {
   this->lock.lock();
 
-  this->datastore.mutable_playlist()->DeleteSubrange(
-      this->PlaylistIndexOfKey(key), 1);
+  int index = this->PlaylistIndexOfKey(key);
+  if (index == -1) {
+    this->lock.unlock();
+    return ::ytmusic::util::Status(
+        "Key " + std::to_string(key) +
+        " does not refer to a playlist in the database.");
+  }
+  this->datastore.mutable_playlist()->DeleteSubrange(index, 1);
 
   if (!this->Commit()) {
     fprintf(stderr, "Failed to commit changes to datastore.\n");
@@ -293,7 +319,7 @@ int Datastore::PlaylistIndexOfKey(int key) {
     }
   }
   for (auto song_key : song_keys) {
-    if (this->SongIndexOfKey(song_key) == -1){
+    if (this->SongIndexOfKey(song_key) == -1) {
       return ::ytmusic::util::Status("Invalid song key detected.");
     }
   }

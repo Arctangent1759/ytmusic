@@ -33,6 +33,7 @@ int main() {
   cout << ds.AddSong("Mine Turtle", "DI5_sQ8O-7Y", "Tom Ska", "asdfmovie").GetMessage() << endl;
   cout << ds.AddSong("I Like Trains", "hHkKJfcBXcw", "Tom Ska", "asdfmovie").GetMessage() << endl;
   cout << ds.AddSong("Do the Flop", "L5inD4XWz4U", "Tom Ska", "asdfmovie").GetMessage() << endl;
+  cout << ds.AddSong("Hug Every Cat", "sP4NMoJcFd4", "", "").GetMessage() << endl;
   std::vector<int> songs;
   songs.push_back(1);
   songs.push_back(2);

@@ -18,6 +18,8 @@ class Datastore {
                                   std::string artist, std::string album);
   int NumSongs();
   ::ytmusic::Datastore_proto_Song* GetSong(int key);
+  ::google::protobuf::RepeatedPtrField<ytmusic::Datastore_proto_Song>
+      GetSongs();
   ::ytmusic::util::Status SetSongTitle(int key, std::string title);
   ::ytmusic::util::Status SetSongYTHash(int key, std::string yt_hash);
   ::ytmusic::util::Status SetSongArtist(int key, std::string artist);
@@ -27,6 +29,8 @@ class Datastore {
                                       std::vector<int> song_keys);
   int NumPlaylists();
   ::ytmusic::Datastore_proto_Playlist* GetPlaylist(int key);
+  ::google::protobuf::RepeatedPtrField<ytmusic::Datastore_proto_Playlist>
+      GetPlaylists();
   ::ytmusic::util::Status SetPlaylistName(int key, std::string name);
   ::ytmusic::util::Status SetPlaylistSongKeys(int key,
                                               std::vector<int> song_keys);

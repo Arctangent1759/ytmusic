@@ -14,13 +14,15 @@ namespace ytmusd {
 class Ytmusd {
   public:
     Ytmusd(std::string datastore_path);
-    void Play(int key);
-    void Play(std::vector<int> keys);
-    void PlayPlaylist(int key);
-    void Stop();
-    void Enqueue(int key);
-    void Next();
-    void Prev();
+    ::ytmusic::util::Status Play(int key);
+    ::ytmusic::util::Status Play(std::vector<int> keys);
+    ::ytmusic::util::Status PlayPlaylist(int key);
+    ::ytmusic::util::Status Pause();
+    ::ytmusic::util::Status Stop();
+    ::ytmusic::util::Status Enqueue(int key);
+    ::ytmusic::util::Status Next();
+    ::ytmusic::util::Status Prev();
+    std::string GetDirectory();
     Datastore* GetDatastore();
 
   private:
