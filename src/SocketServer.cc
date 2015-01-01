@@ -7,6 +7,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <thread>
+#include <iostream>
 
 namespace ytmusic {
 namespace util {
@@ -45,6 +46,7 @@ void SocketServer::Start() {
     if ((conn_sock = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen)) < 0) {
       fprintf(stderr, "Failed to accept connection.\n");
     }
+    std::cout << "Connect socket." << std::endl;
     std::thread(&SocketServer::ServeRequest, this, conn_sock).detach();
   }
   printf("Server exiting\n");
@@ -62,7 +64,9 @@ void SocketServer::ServeRequest(int sockfd) {
     }
     request += buf;
   }
+  std::cout << "Received request " << request << std::endl;
   dprintf(sockfd, "%s\n", this->handler->HandleRequest(request).c_str());
+  std::cout << "Response writen." << std::endl;
   close(sockfd);
 }
 

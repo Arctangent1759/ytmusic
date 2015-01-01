@@ -14,8 +14,8 @@ PROTO_FILES := $(shell find $(PROTODIR) -type f -name *.proto)
 PROTO_SOURCES := $(patsubst $(PROTODIR)/%,%,$(PROTO_FILES:.proto=.pb))
 PROTO_OBJECTS := $(patsubst $(PROTODIR)/%,$(BUILDDIR)/%,$(PROTO_FILES:.proto=.pb.o))
 CFLAGS := -std=c++11 -g # -Wall
-LIB := -lre2 -pthread -L lib `pkg-config --cflags --libs python2` -Wl,-rpath=/opt/gstreamer-sdk/lib `pkg-config --cflags --libs gstreamer-0.10` -lprotobuf
-INC := -I include -I gen
+LIB := -lre2 -pthread -L lib `pkg-config --cflags --libs python2` -Wl,-rpath=/opt/gstreamer-sdk/lib `pkg-config --cflags --libs gstreamer-0.10` -lprotobuf -lncurses
+INC := -I include -I gen -I lib
 
 RUNNERS := $(shell ls $(SRCDIR)/*-runner.$(SRCEXT) | sed s/\.$(SRCEXT)$$/.o/g | sed s/^$(SRCDIR)/$(BUILDDIR)/g)
 
@@ -23,7 +23,7 @@ OBJECTS_NO_RUNNERS := $(shell echo $(OBJECTS) $(PROTO_OBJECTS) | sed s/\ /\\n/g 
 
 all: server client
 
-client: $(OBJECTS) | proto
+client: $(OBJECTS)
 	@echo " Linking..."
 	@mkdir -p $(BINDIR)
 	@echo " $(CC) $(OBJECTS_NO_RUNNERS) build/client-runner.o -o $(BINDIR)/client $(LIB)"; $(CC) $(OBJECTS_NO_RUNNERS) build/client-runner.o -o $(BINDIR)/client $(LIB)

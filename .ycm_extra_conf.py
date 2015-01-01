@@ -89,6 +89,9 @@ flags = [
 '-pthread',
 '-lglib-2.0',
 '-lxml2',
+'-lncurses',
+'-I',
+'lib',
 ]
 
 

@@ -7,6 +7,9 @@ using namespace std;
 
 #include "URLDecoder.h"
 #include "Ytmusd.h"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
 namespace ytmusic {
 namespace ytmusd {
@@ -88,39 +91,48 @@ Ytmusd::Ytmusd(std::string datastore_path) {
   return util::Status();
 }
 std::string Ytmusd::GetDirectory() {
-  std::stringstream directory;
-  directory << "{\"songs\":[";
+  rapidjson::Document d;
+  d.SetObject();
+  rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
+  rapidjson::Value song_list(rapidjson::kArrayType);
   for (auto song : this->datastore->GetSongs()) {
-    std::stringstream song_entry;
-    song_entry << "{\"primary_key\":" << song.primary_key()
-               << ",\"title\":\"" << song.title() << "\",\"yt_hash\":\""
-               << song.yt_hash() << "\"";
+    rapidjson::Value val, title, yt_hash, artist, album;
+    val.SetObject();
+    val.AddMember("primary_key", song.primary_key(), allocator);
+    title.SetString(song.title().c_str(), song.title().length());
+    val.AddMember("title", title, allocator);
+    yt_hash.SetString(song.yt_hash().c_str(), song.yt_hash().length());
+    val.AddMember("yt_hash", yt_hash, allocator);
     if (song.has_artist()) {
-      song_entry << ",\"artist\":\"" << song.artist() << "\"";
+      artist.SetString(song.artist().c_str(), song.artist().size());
+      val.AddMember("artist", artist, allocator);
     }
     if (song.has_album()) {
-      song_entry << ",album:\"" << song.album() << "\"";
+      album.SetString(song.album().c_str(), song.album().size());
+      val.AddMember("album", album, allocator);
     }
-    song_entry << "}";
-    directory << song_entry.str() << ",";
+    song_list.PushBack(val, allocator);
   }
-  directory << "],";
-  directory << "\"playlists\":[";
+  d.AddMember("songs", song_list, allocator);
+  rapidjson::Value playlist_list(rapidjson::kArrayType);
   for (auto playlist : this->datastore->GetPlaylists()) {
-    std::stringstream playlist_entry;
-    playlist_entry << "{";
-    playlist_entry << "\"primary_key\":\"" << playlist.primary_key() << "\"";
-    playlist_entry << "\"name\":\"" << playlist.name() << "\"";
-    playlist_entry << "\"songs\":[";
-    for (int i : playlist.song_key()) {
-      playlist_entry << i << ",";
+    rapidjson::Value val, name;
+    val.SetObject();
+    val.AddMember("primary_key", playlist.primary_key(), allocator);
+    name.SetString(playlist.name().c_str(), playlist.name().length());
+    val.AddMember("name", name, allocator);
+    rapidjson::Value song_keys(rapidjson::kArrayType);
+    for (auto key : playlist.song_key()) {
+      song_keys.PushBack(key, allocator);
     }
-    playlist_entry << "]";
-    playlist_entry << "},";
-    directory << playlist_entry.str() << ",";
+    val.AddMember("songs", song_keys, allocator);
+    playlist_list.PushBack(val, allocator);
   }
-  directory << "]}";
-  return directory.str();
+  d.AddMember("playlists", playlist_list, allocator);
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  d.Accept(writer);
+  return buffer.GetString();
 }
 Datastore* Ytmusd::GetDatastore() { return this->datastore.get(); }
 int Ytmusd::GetNowPlayingIndex() {
@@ -388,7 +400,6 @@ void YtmusdServer::InitHandlers() {
                               [this](std::string pattern, std::string request) {
     return this->ytmusd->GetDirectory();
   });
-
 
   /*
   ::ytmusic::util::Status DelPlaylist(int key);
