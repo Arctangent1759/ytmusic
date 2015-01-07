@@ -1,4 +1,5 @@
 #include "Status.h"
+#include <iostream>
 
 namespace ytmusic {
 namespace util {
@@ -9,6 +10,9 @@ Status::Status(int code) : Status("",code) {}
 Status::Status() : Status("",0) {}
 Status::operator bool() const{
   return (this->code == 0);
+}
+Status::operator std::string() const{
+  return this->GetMessage();
 }
 std::string Status::GetMessage() const {
   return this->message;

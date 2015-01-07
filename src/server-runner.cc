@@ -23,7 +23,7 @@ std::string echo(std::vector<std::string> request){
 using ytmusic::player::Audio;
 
 int main() {
-  Ytmusd* ytmusd = new Ytmusd("/home/arctangent1759/.ytmus");
+  Ytmusd* ytmusd = new Ytmusd("/home/arctangent/.ytmus");
   YtmusdServer server(1759, 5, ytmusd);
   server.Start();
 }

@@ -341,8 +341,10 @@ int Datastore::PlaylistIndexOfKey(int key) {
 }
 
 ::ytmusic::util::Status Datastore::Commit() {
-  std::ofstream file(this->path, std::ios::trunc | std::ios::binary);
+  std::ofstream file;
+  file.open(this->path,  std::ios::trunc | std::ios::binary);
   if (!file) {
+    std::cout << "asdf" << std::endl;
     return ::ytmusic::util::Status("Could not open file.",
                                    kErrorCouldNotOpenFile);
   }

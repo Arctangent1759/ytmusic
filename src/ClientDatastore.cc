@@ -3,8 +3,6 @@
 #include <fstream>
 #include <iostream>
 #include <streambuf>
-using std::cout;
-using std::endl;
 
 #include "rapidjson/document.h"
 

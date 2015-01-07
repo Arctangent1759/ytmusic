@@ -3,7 +3,6 @@
 #include <sstream>
 #include <re2/re2.h>
 #include <iostream>
-using namespace std;
 
 #include "URLDecoder.h"
 #include "Ytmusd.h"
@@ -83,6 +82,11 @@ Ytmusd::Ytmusd(std::string datastore_path) {
   this->audio.Pause();
   return util::Status();
 }
+::ytmusic::util::Status Ytmusd::Continue() {
+  this->audio.Play();
+  return util::Status();
+}
+
 ::ytmusic::util::Status Ytmusd::Stop() {
   this->queue.clear();
   this->audio.ClearQueue();
@@ -139,6 +143,8 @@ int Ytmusd::GetNowPlayingIndex() {
   return this->now_playing + this->audio.GetOffset();
 }
 void Ytmusd::Update() {
+  this->audio.ClearQueue();
+  this->audio.Skip();
   for (int i = this->now_playing; i < this->queue.size(); ++i) {
     auto song = this->datastore->GetSong(this->queue[i]);
     std::string song_url = kYoutubeUrlTemplate + song->yt_hash();
@@ -156,10 +162,10 @@ YtmusdServer::YtmusdServer(int port, int backlog, Ytmusd* ytmusd) {
 void YtmusdServer::Start() { this->server->Start(); }
 
 std::string Error(std::string message) {
-  return "{error:true, message:\"" + message + "\"}";
+  return "{\"error\":true, \"message\":\"" + message + "\"}";
 }
 std::string Ack(std::string message) {
-  return "{error:false, message:\"" + message + "\"}";
+  return "{\"error\":false, \"message\":\"" + message + "\"}";
 }
 
 void YtmusdServer::InitHandlers() {
@@ -207,6 +213,14 @@ void YtmusdServer::InitHandlers() {
   dispatcher->RegisterHandler("Pause\\(\\)",
                               [this](std::string pattern, std::string request) {
     ::ytmusic::util::Status status = this->ytmusd->Pause();
+    if (!status) {
+      return Error(status.GetMessage());
+    }
+    return Ack("");
+  });
+  dispatcher->RegisterHandler("Continue\\(\\)",
+                              [this](std::string pattern, std::string request) {
+    ::ytmusic::util::Status status = this->ytmusd->Continue();
     if (!status) {
       return Error(status.GetMessage());
     }

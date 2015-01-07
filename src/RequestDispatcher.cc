@@ -16,7 +16,7 @@ std::string RequestDispatcher::HandleRequest(std::string request) {
       return pattern_handler_pair.second(pattern_handler_pair.first, request);
     }
   }
-  return "ERROR: Could not find a handle request " + request;
+  return "{\"error\":true, \"message\":\"ERROR: Invalid request.\"}";
 }
 void RequestDispatcher::RegisterHandler(std::string pattern, HandlerFunc handler) {
   this->handlers.emplace_back(pattern + "[\\r\\n]*", handler);

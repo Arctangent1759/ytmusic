@@ -18,6 +18,7 @@ class Ytmusd {
     ::ytmusic::util::Status Play(std::vector<int> keys);
     ::ytmusic::util::Status PlayPlaylist(int key);
     ::ytmusic::util::Status Pause();
+    ::ytmusic::util::Status Continue();
     ::ytmusic::util::Status Stop();
     ::ytmusic::util::Status Enqueue(int key);
     ::ytmusic::util::Status Next();

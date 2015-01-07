@@ -9,6 +9,8 @@ namespace YTMClient {
 class YTMClient {
  public:
   YTMClient(std::string hostname, int port);
+  ytmusic::util::Status PlaySong(int key);
+  ytmusic::util::Status PlaySongs(std::vector<int> keys);
   ytmusic::util::Status PlayPlaylist(int key);
   ytmusic::util::Status Pause();
   ytmusic::util::Status Stop();
@@ -28,7 +30,7 @@ class YTMClient {
   ytmusic::util::Status SetPlaylistSongKeys(int key,
                                             std::vector<int> song_keys);
   ytmusic::util::Status DelPlaylist(int key);
-  std::string GetDirectory();
+  ytmusic::util::Status GetDirectory(std::string* response);
 
  private:
   ytmusic::util::Status SendString(std::string s);

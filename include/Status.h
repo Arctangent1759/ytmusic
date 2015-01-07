@@ -1,4 +1,5 @@
 #include <string>
+#include <string>
 
 #ifndef STATUS_H
 #define STATUS_H
@@ -8,6 +9,7 @@ namespace util {
 
 class Status {
   public:
+
     Status(std::string message, int code);
     Status(std::string message);
     Status(int code);
@@ -15,6 +17,7 @@ class Status {
     std::string GetMessage() const;
     int GetCode() const;
     operator bool() const;
+    operator std::string() const;
 
   private:
     std::string message;

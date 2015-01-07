@@ -40,9 +40,6 @@ void ClearDetailPage(int x, int y, int width, int height);
 YTMClient::ClientDatastore datastore("test.json");
 
 int main() {
-  YTMClient::YTMClient ytm("localhost", 1759);
-  cout << "OUTPUT: " << ytm.GetDirectory() << endl;
-  /*
   init();
   while (true) {
     datastore.Refresh();
@@ -53,9 +50,7 @@ int main() {
     footer(max_x, max_y, ch);
     content(max_x, max_y, ch);
   }
-
   endwin();
-  */
 }
 
 void init() {
