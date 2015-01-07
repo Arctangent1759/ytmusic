@@ -100,7 +100,6 @@ void content(int max_x, int max_y, int ch) {
   menus[0].SetOptions(top_options);
   menus[0].Draw(active_menu == 0, selection_stack[0]);
   menus[0].SetHasNextMenu(true);
-
   switch (selection_stack[0]) {
     case 0:
       menus[1].SetTitle("Songs");
