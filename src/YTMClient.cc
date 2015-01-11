@@ -5,7 +5,6 @@
 #include <netdb.h>
 #include <cstring>
 #include <unistd.h>
-#include <iostream>
 
 #include "rapidjson/document.h"
 
@@ -31,6 +30,7 @@ ytmusic::util::Status YTMClient::PlayPlaylist(int key) {
   return this->SendString("PlayPlaylist(" + std::to_string(key) + ")");
 }
 ytmusic::util::Status YTMClient::Pause() { return this->SendString("Pause()"); }
+ytmusic::util::Status YTMClient::Resume() { return this->SendString("Resume()"); }
 ytmusic::util::Status YTMClient::Stop() { return this->SendString("Stop()"); }
 ytmusic::util::Status YTMClient::Next() { return this->SendString("Next()"); }
 ytmusic::util::Status YTMClient::Prev() { return this->SendString("Prev()"); }
@@ -96,7 +96,6 @@ ytmusic::util::Status YTMClient::SendString(std::string s) {
 }
 
 ytmusic::util::Status ResponseToStatus(std::string response) {
-  std::cout << response << std::endl;
   rapidjson::Document doc;
   doc.Parse(response.c_str());
   if (doc.HasMember("error") && doc["error"].GetBool()) {
@@ -145,6 +144,7 @@ ytmusic::util::Status YTMClient::SendString(std::string s,
     }
     *response += &buf;
   }
+  close(sockfd);
   return ResponseToStatus(*response);
 }
 

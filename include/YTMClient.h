@@ -13,6 +13,7 @@ class YTMClient {
   ytmusic::util::Status PlaySongs(std::vector<int> keys);
   ytmusic::util::Status PlayPlaylist(int key);
   ytmusic::util::Status Pause();
+  ytmusic::util::Status Resume();
   ytmusic::util::Status Stop();
   ytmusic::util::Status Next();
   ytmusic::util::Status Prev();

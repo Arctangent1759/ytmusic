@@ -4,6 +4,10 @@
 #include <iostream>
 #include <stdlib.h>
 
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+
 namespace ytmusic {
 namespace ytmusd {
 
@@ -280,6 +284,59 @@ Datastore::GetPlaylists() {
   this->lock.unlock();
   return ::ytmusic::util::Status();
 }
+std::string PV(rapidjson::Document d, int i) {
+  return d["songs"][i]["title"].GetString();
+}
+std::string Datastore::ToJSON() {
+  this->lock.lock();
+  std::string out;
+  rapidjson::Document d;
+  d.SetObject();
+  rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
+  rapidjson::Value song_list(rapidjson::kArrayType);
+  for (auto song : this->datastore.song()) {
+    rapidjson::Value val, title, yt_hash, artist, album;
+    val.SetObject();
+    val.AddMember("primary_key", song.primary_key(), allocator);
+    title.SetString(song.title().c_str(), song.title().length(), allocator);
+    val.AddMember("title", title, allocator);
+    yt_hash.SetString(song.yt_hash().c_str(), song.yt_hash().length(),
+                      allocator);
+    val.AddMember("yt_hash", yt_hash, allocator);
+    if (song.has_artist()) {
+      artist.SetString(song.artist().c_str(), song.artist().size(), allocator);
+      val.AddMember("artist", artist, allocator);
+    }
+    if (song.has_album()) {
+      album.SetString(song.album().c_str(), song.album().size(), allocator);
+      val.AddMember("album", album, allocator);
+    }
+    song_list.PushBack(val, allocator);
+  }
+  d.AddMember("songs", song_list, allocator);
+  rapidjson::Value playlist_list(rapidjson::kArrayType);
+  for (auto playlist : this->datastore.playlist()) {
+    rapidjson::Value val, name;
+    val.SetObject();
+    val.AddMember("primary_key", playlist.primary_key(), allocator);
+    name.SetString(playlist.name().c_str(), playlist.name().length(),
+                   allocator);
+    val.AddMember("name", name, allocator);
+    rapidjson::Value song_keys(rapidjson::kArrayType);
+    for (auto key : playlist.song_key()) {
+      song_keys.PushBack(key, allocator);
+    }
+    val.AddMember("songs", song_keys, allocator);
+    playlist_list.PushBack(val, allocator);
+  }
+  d.AddMember("playlists", playlist_list, allocator);
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  d.Accept(writer);
+  out = buffer.GetString();
+  lock.unlock();
+  return out;
+}
 
 int Datastore::SongIndexOfKey(int key) {
   for (int i = 0; i < this->datastore.song_size(); ++i) {
@@ -326,7 +383,8 @@ int Datastore::PlaylistIndexOfKey(int key) {
   return ::ytmusic::util::Status();
 }
 ::ytmusic::util::Status Datastore::Restore() {
-  std::ifstream file(this->path, std::ios::in | std::ios::binary);
+  std::ifstream file;
+  file.open(this->path, std::ios::in | std::ios::binary);
   if (!file) {
     return ::ytmusic::util::Status("Could not open file.",
                                    kErrorCouldNotOpenFile);
@@ -342,9 +400,8 @@ int Datastore::PlaylistIndexOfKey(int key) {
 
 ::ytmusic::util::Status Datastore::Commit() {
   std::ofstream file;
-  file.open(this->path,  std::ios::trunc | std::ios::binary);
+  file.open(this->path, std::ios::trunc | std::ios::binary);
   if (!file) {
-    std::cout << "asdf" << std::endl;
     return ::ytmusic::util::Status("Could not open file.",
                                    kErrorCouldNotOpenFile);
   }

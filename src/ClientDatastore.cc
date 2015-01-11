@@ -8,11 +8,16 @@
 
 namespace YTMClient {
 
-ClientDatastore::ClientDatastore(std::string server_url) {
-  this->server_url = server_url;
+ClientDatastore::ClientDatastore(YTMClient* client) {
+  this->client = client;
 }
 
 void ClientDatastore::Refresh() {
+  std::string directory_json;
+  if (!this->GetDirectory(&directory_json)) {
+    return;
+  }
+
   this->title_index.clear();
   this->titles.clear();
   this->album_index.clear();
@@ -25,7 +30,7 @@ void ClientDatastore::Refresh() {
   this->playlist_list.clear();
 
   rapidjson::Document directory;
-  directory.Parse(this->GetDirectory().c_str());
+  directory.Parse(directory_json.c_str());
   for (int i = 0; i < directory["songs"].Size(); ++i) {
     int key;
     std::string title, artist, album;
@@ -68,9 +73,11 @@ void ClientDatastore::Refresh() {
   }
 }
 
+int ClientDatastore::GetNumSongs() { return this->titles.size(); }
 std::vector<std::string> ClientDatastore::GetTitles() { return this->titles; }
 std::vector<std::string> ClientDatastore::GetArtists() { return this->artists; }
 std::vector<std::string> ClientDatastore::GetAlbums() { return this->albums; }
+int ClientDatastore::GetNumPlaylists() { return this->playlists.size(); }
 std::vector<std::string> ClientDatastore::GetPlaylists() {
   return this->playlists;
 }
@@ -104,13 +111,11 @@ bool ClientDatastore::HasSong(std::string title) {
 song_entry ClientDatastore::GetSongInfo(std::string title) {
   return this->song_list[this->title_index[title]];
 }
-
-std::string ClientDatastore::GetDirectory() {
-  // TODO(arctangent1759): implement.
-  std::ifstream f(this->server_url);
-  std::string out((std::istreambuf_iterator<char>(f)),
-                  std::istreambuf_iterator<char>());
-  return out;
+playlist_entry ClientDatastore::GetPlaylistInfo(std::string name) {
+  return this->playlist_list[this->playlist_name_index[name]];
+}
+bool ClientDatastore::GetDirectory(std::string* result) {
+  return this->client->GetDirectory(result);
 }
 
 void ClientDatastore::RegisterSong(int key, std::string title,

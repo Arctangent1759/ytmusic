@@ -6,9 +6,6 @@
 
 #include "URLDecoder.h"
 #include "Ytmusd.h"
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
 
 namespace ytmusic {
 namespace ytmusd {
@@ -95,48 +92,7 @@ Ytmusd::Ytmusd(std::string datastore_path) {
   return util::Status();
 }
 std::string Ytmusd::GetDirectory() {
-  rapidjson::Document d;
-  d.SetObject();
-  rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
-  rapidjson::Value song_list(rapidjson::kArrayType);
-  for (auto song : this->datastore->GetSongs()) {
-    rapidjson::Value val, title, yt_hash, artist, album;
-    val.SetObject();
-    val.AddMember("primary_key", song.primary_key(), allocator);
-    title.SetString(song.title().c_str(), song.title().length());
-    val.AddMember("title", title, allocator);
-    yt_hash.SetString(song.yt_hash().c_str(), song.yt_hash().length());
-    val.AddMember("yt_hash", yt_hash, allocator);
-    if (song.has_artist()) {
-      artist.SetString(song.artist().c_str(), song.artist().size());
-      val.AddMember("artist", artist, allocator);
-    }
-    if (song.has_album()) {
-      album.SetString(song.album().c_str(), song.album().size());
-      val.AddMember("album", album, allocator);
-    }
-    song_list.PushBack(val, allocator);
-  }
-  d.AddMember("songs", song_list, allocator);
-  rapidjson::Value playlist_list(rapidjson::kArrayType);
-  for (auto playlist : this->datastore->GetPlaylists()) {
-    rapidjson::Value val, name;
-    val.SetObject();
-    val.AddMember("primary_key", playlist.primary_key(), allocator);
-    name.SetString(playlist.name().c_str(), playlist.name().length());
-    val.AddMember("name", name, allocator);
-    rapidjson::Value song_keys(rapidjson::kArrayType);
-    for (auto key : playlist.song_key()) {
-      song_keys.PushBack(key, allocator);
-    }
-    val.AddMember("songs", song_keys, allocator);
-    playlist_list.PushBack(val, allocator);
-  }
-  d.AddMember("playlists", playlist_list, allocator);
-  rapidjson::StringBuffer buffer;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-  d.Accept(writer);
-  return buffer.GetString();
+  return this->datastore->ToJSON();
 }
 Datastore* Ytmusd::GetDatastore() { return this->datastore.get(); }
 int Ytmusd::GetNowPlayingIndex() {

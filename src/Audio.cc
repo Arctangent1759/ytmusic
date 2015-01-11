@@ -73,6 +73,7 @@ int Audio::GetOffset() {
 }
 
 void Audio::player() {
+  gst_init (0, NULL);
   std::string song_url;
   ytmusic::URLDecoder decoder;
   this->started = true;
@@ -87,7 +88,7 @@ void Audio::player() {
       play_song(this->pipeline);
       this->offset += 1;
     } else {
-      std::this_thread::sleep_for(std::chrono::milliseconds(25));
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   }
 }
@@ -137,8 +138,6 @@ void play_song(GstElement* pipeline) {
 }
 
 GstElement* init_song(std::string song_url) {
-  gst_init (0, NULL);
-    
   GstElement* source = gst_element_factory_make ("uridecodebin", "source");
   GstElement* convert = gst_element_factory_make ("audioconvert", "convert");
   GstElement* sink = gst_element_factory_make ("autoaudiosink", "sink");
@@ -159,6 +158,9 @@ GstElement* init_song(std::string song_url) {
   GstStateChangeReturn ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_printerr ("Unable to set the pipeline to the playing state.\n");
+    gst_object_unref (pipeline);
+  } else if (ret == GST_STATE_CHANGE_NO_PREROLL) {
+    g_printerr ("Stream is live. Unable to handle.");
     gst_object_unref (pipeline);
   }
   return pipeline;

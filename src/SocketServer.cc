@@ -53,7 +53,6 @@ void SocketServer::Start() {
         0) {
       fprintf(stderr, "Failed to accept connection.\n");
     }
-    std::cout << "Connect socket." << std::endl;
     std::thread(&SocketServer::ServeRequest, this, conn_sock).detach();
   }
   printf("Server exiting\n");
@@ -71,9 +70,7 @@ void SocketServer::ServeRequest(int sockfd) {
     }
     request += buf;
   }
-  std::cout << "Received request " << request << std::endl;
   dprintf(sockfd, "%s\n", this->handler->HandleRequest(request).c_str());
-  std::cout << "Response writen." << std::endl;
   close(sockfd);
 }
 

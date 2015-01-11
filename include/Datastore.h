@@ -35,6 +35,7 @@ class Datastore {
   ::ytmusic::util::Status SetPlaylistSongKeys(int key,
                                               std::vector<int> song_keys);
   ::ytmusic::util::Status DelPlaylist(int key);
+  std::string ToJSON();
 
  private:
   std::mutex lock;
