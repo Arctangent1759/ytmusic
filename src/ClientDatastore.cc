@@ -111,6 +111,9 @@ bool ClientDatastore::HasSong(std::string title) {
 song_entry ClientDatastore::GetSongInfo(std::string title) {
   return this->song_list[this->title_index[title]];
 }
+song_entry ClientDatastore::GetSongInfo(int key) {
+  return this->song_list[this->key_index[key]];
+}
 playlist_entry ClientDatastore::GetPlaylistInfo(std::string name) {
   return this->playlist_list[this->playlist_name_index[name]];
 }

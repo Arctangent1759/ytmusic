@@ -30,7 +30,8 @@ ytmusic::util::Status YTMClient::PlayPlaylist(int key) {
   return this->SendString("PlayPlaylist(" + std::to_string(key) + ")");
 }
 ytmusic::util::Status YTMClient::Pause() { return this->SendString("Pause()"); }
-ytmusic::util::Status YTMClient::Resume() { return this->SendString("Resume()"); }
+ytmusic::util::Status YTMClient::Continue() { return this->SendString("Continue()"); }
+ytmusic::util::Status YTMClient::TogglePause() { return this->SendString("TogglePause()"); }
 ytmusic::util::Status YTMClient::Stop() { return this->SendString("Stop()"); }
 ytmusic::util::Status YTMClient::Next() { return this->SendString("Next()"); }
 ytmusic::util::Status YTMClient::Prev() { return this->SendString("Prev()"); }
@@ -89,6 +90,30 @@ ytmusic::util::Status YTMClient::DelPlaylist(int key) {
 }
 ytmusic::util::Status YTMClient::GetDirectory(std::string* response) {
   return this->SendString("GetDirectory()", response);
+}
+ytmusic::util::Status YTMClient::GetStatus(YtmStatus* response) {
+  std::string response_json;
+  ytmusic::util::Status req_status = this->SendString("GetStatus()", &response_json);
+  if (!req_status) {
+    return req_status;
+  }
+  rapidjson::Document d;
+  d.Parse(response_json.c_str());
+  if (!(d.HasMember("queue") && d["queue"].IsArray())) {
+    return ytmusic::util::Status("Expected array \"queue\" in response json.");
+  }
+  for (int i = 0; i < d["queue"].Size(); ++i) {
+    response->queue.push_back(d["queue"][i].GetInt());
+  }
+  if (!(d.HasMember("now_playing") && d["now_playing"].IsInt())) {
+    return ytmusic::util::Status("Expected int \"now_playing\" in response json.");
+  }
+  response->now_playing = d["now_playing"].GetInt();
+  if (!(d.HasMember("is_playing") && d["is_playing"].IsBool())) {
+    return ytmusic::util::Status("Expected bool \"is_playing\" in response json.");
+  }
+  response->is_playing = d["is_playing"].GetBool();
+  return req_status;
 }
 ytmusic::util::Status YTMClient::SendString(std::string s) {
   std::string result;

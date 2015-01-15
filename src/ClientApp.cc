@@ -11,6 +11,9 @@ namespace YTMClient {
 
 const int kHeaderHeight = 1;
 const int kFooterHeight = 1;
+const int kQueueLeftPadding = 2;
+const int kNumQueueEntries = 7;
+const std::string k25Spaces = "                         ";
 
 void fill_line(WINDOW* w);
 
@@ -21,6 +24,8 @@ enum YtmusColor : short int {
   DIVIDER = 4,
   ENTRY_BOLD = 5,
   TITLE = 6,
+  PLAYING = 7,
+  PAUSED = 8,
 };
 enum Menu : int {
   SONGS_MENU = 0,
@@ -54,6 +59,8 @@ void ClientApp::Run() {
   init_pair(YtmusColor::DIVIDER, COLOR_BLUE, COLOR_BLUE);
   init_pair(YtmusColor::ENTRY_BOLD, COLOR_GREEN, COLOR_BLACK);
   init_pair(YtmusColor::TITLE, COLOR_RED, COLOR_BLACK);
+  init_pair(YtmusColor::PLAYING, COLOR_WHITE, COLOR_GREEN);
+  init_pair(YtmusColor::PAUSED, COLOR_WHITE, COLOR_RED);
   timeout(1000);
   while (true) {
     datastore->Refresh();
@@ -115,7 +122,7 @@ void ClientApp::ControlsUpdate(char ch) {
       curr_action = YtmusAction::NEXT;
       break;
     case 'P':
-      curr_action = YtmusAction::PAUSE;
+      curr_action = YtmusAction::TOGGLE_PAUSE;
       break;
     case 's':
       curr_action = YtmusAction::STOP;
@@ -151,6 +158,40 @@ void ClientApp::Header() {
 void ClientApp::Footer() {
   WINDOW* footer =
       newwin(kFooterHeight, this->max_x, this->max_y - kFooterHeight, 0);
+  YtmStatus status;
+  if (!this->client->GetStatus(&status)) {
+    wprintw(footer, "ERROR.");
+    delwin(footer);
+    return;
+  }
+  int queue_entry_width = getmaxx(footer) / kNumQueueEntries;
+  int queue_right_padding = kNumQueueEntries - kQueueLeftPadding - 1;
+  for (int i = 0; i < kNumQueueEntries; ++i) {
+    int queue_index;
+    if (status.now_playing < kQueueLeftPadding) {
+      queue_index = 0 + i;
+    } else if (status.now_playing + queue_right_padding >= status.queue.size()) {
+      queue_index = status.queue.size() - kNumQueueEntries + i;
+    } else {
+      queue_index = status.now_playing + i - kQueueLeftPadding;
+    }
+    if (queue_index < 0 || queue_index >=  status.queue.size()) {
+      continue;
+    }
+    if (queue_index == status.now_playing) {
+      if (status.is_playing) {
+        wattrset(footer, COLOR_PAIR(YtmusColor::PLAYING));
+      } else {
+        wattrset(footer, COLOR_PAIR(YtmusColor::PAUSED));
+      }
+    } else {
+      wattrset(footer, COLOR_PAIR(YtmusColor::NORMAL));
+    }
+    wprintw(footer, "%s >",
+            (this->datastore->GetSongInfo(status.queue[queue_index]).title + k25Spaces)
+                .substr(0, queue_entry_width - 2)
+                .c_str());
+  }
   wrefresh(footer);
   delwin(footer);
 }
@@ -176,7 +217,7 @@ void ClientApp::Content() {
           wattrset(content, COLOR_PAIR(YtmusColor::SELECTED));
           ::wmove(content, row, 0);
           fill_line(content);
-          selected= this->datastore->GetSongInfo(titles[i]);
+          selected = this->datastore->GetSongInfo(titles[i]);
         } else {
           wattrset(content, COLOR_PAIR(YtmusColor::NORMAL));
         }
@@ -204,11 +245,8 @@ void ClientApp::Content() {
         case YtmusAction::PREV: {
           this->client->Prev();
         } break;
-        case YtmusAction::PAUSE: {
-          this->client->Pause();
-        } break;
-        case YtmusAction::RESUME: {
-          this->client->Resume();
+        case YtmusAction::TOGGLE_PAUSE: {
+          this->client->TogglePause();
         } break;
         case YtmusAction::STOP: {
           this->client->Stop();
@@ -232,7 +270,7 @@ void ClientApp::Content() {
           wattrset(content, COLOR_PAIR(YtmusColor::SELECTED));
           ::wmove(content, row, 0);
           fill_line(content);
-          selected= this->datastore->GetPlaylistInfo(playlist_names[i]);
+          selected = this->datastore->GetPlaylistInfo(playlist_names[i]);
         } else {
           wattrset(content, COLOR_PAIR(YtmusColor::NORMAL));
         }
@@ -256,11 +294,8 @@ void ClientApp::Content() {
         case YtmusAction::PREV: {
           this->client->Prev();
         } break;
-        case YtmusAction::PAUSE: {
-          this->client->Pause();
-        } break;
-        case YtmusAction::RESUME: {
-          this->client->Resume();
+        case YtmusAction::TOGGLE_PAUSE: {
+          this->client->TogglePause();
         } break;
         case YtmusAction::STOP: {
           this->client->Stop();

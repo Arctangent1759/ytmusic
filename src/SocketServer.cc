@@ -61,8 +61,7 @@ void SocketServer::Start() {
 
 void SocketServer::ServeRequest(int sockfd) {
   std::string request;
-  char buf[2];
-  buf[1] = '\0';
+  char buf[2] = {'\n', '\0'};
   while (true) {
     read(sockfd, buf, 1);
     if (buf[0] == '\n') {

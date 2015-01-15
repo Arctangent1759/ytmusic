@@ -16,8 +16,7 @@ enum class YtmusAction {
   NEW,
   NEXT,
   PREV,
-  PAUSE,
-  RESUME,
+  TOGGLE_PAUSE,
   STOP,
 };
 

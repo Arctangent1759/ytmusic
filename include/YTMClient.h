@@ -6,6 +6,12 @@
 
 namespace YTMClient {
 
+typedef struct ytm_status_t {
+  int now_playing;
+  bool is_playing;
+  std::vector<int> queue;
+} YtmStatus;
+
 class YTMClient {
  public:
   YTMClient(std::string hostname, int port);
@@ -13,7 +19,8 @@ class YTMClient {
   ytmusic::util::Status PlaySongs(std::vector<int> keys);
   ytmusic::util::Status PlayPlaylist(int key);
   ytmusic::util::Status Pause();
-  ytmusic::util::Status Resume();
+  ytmusic::util::Status Continue();
+  ytmusic::util::Status TogglePause();
   ytmusic::util::Status Stop();
   ytmusic::util::Status Next();
   ytmusic::util::Status Prev();
@@ -32,6 +39,7 @@ class YTMClient {
                                             std::vector<int> song_keys);
   ytmusic::util::Status DelPlaylist(int key);
   ytmusic::util::Status GetDirectory(std::string* response);
+  ytmusic::util::Status GetStatus(YtmStatus* response);
 
  private:
   ytmusic::util::Status SendString(std::string s);

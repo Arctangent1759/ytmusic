@@ -284,9 +284,7 @@ Datastore::GetPlaylists() {
   this->lock.unlock();
   return ::ytmusic::util::Status();
 }
-std::string PV(rapidjson::Document d, int i) {
-  return d["songs"][i]["title"].GetString();
-}
+
 std::string Datastore::ToJSON() {
   this->lock.lock();
   std::string out;

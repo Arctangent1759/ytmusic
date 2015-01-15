@@ -36,6 +36,7 @@ class ClientDatastore {
   std::vector<std::string> GetTitlesByArtist(std::string artist);
   std::vector<std::string> GetTitlesByAlbum(std::string album);
   song_entry GetSongInfo(std::string title);
+  song_entry GetSongInfo(int key);
   playlist_entry GetPlaylistInfo(std::string name);
   bool HasSong(std::string title);
 

@@ -1,6 +1,7 @@
 #ifndef YTMUSD_H
 #define YTMUSD_H
 
+#include <mutex>
 #include <memory>
 
 #include "Audio.h"
@@ -19,11 +20,13 @@ class Ytmusd {
     ::ytmusic::util::Status PlayPlaylist(int key);
     ::ytmusic::util::Status Pause();
     ::ytmusic::util::Status Continue();
+    ::ytmusic::util::Status TogglePause();
     ::ytmusic::util::Status Stop();
     ::ytmusic::util::Status Enqueue(int key);
     ::ytmusic::util::Status Next();
     ::ytmusic::util::Status Prev();
     std::string GetDirectory();
+    std::string GetStatus();
     Datastore* GetDatastore();
 
   private:
@@ -44,6 +47,7 @@ class YtmusdServer {
     std::unique_ptr<::ytmusic::util::SocketServer> server;
     ::ytmusic::util::RequestDispatcher* dispatcher;
     std::unique_ptr<Ytmusd> ytmusd;
+    std::mutex mut;
 };
 
 }  // namespace ytmusd

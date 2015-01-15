@@ -7,6 +7,10 @@
 #include "URLDecoder.h"
 #include "Ytmusd.h"
 
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+
 namespace ytmusic {
 namespace ytmusd {
 
@@ -16,6 +20,7 @@ Ytmusd::Ytmusd(std::string datastore_path) {
   this->datastore = std::unique_ptr<Datastore>(new Datastore(datastore_path));
 }
 ::ytmusic::util::Status Ytmusd::Play(int key) {
+  std::cout << "PLAY CALLED." << std::endl;
   if (!this->datastore->GetSong(key)) {
     return util::Status("Song key " + std::to_string(key) + " does not exist.");
   }
@@ -26,6 +31,7 @@ Ytmusd::Ytmusd(std::string datastore_path) {
   return util::Status();
 }
 ::ytmusic::util::Status Ytmusd::Play(std::vector<int> keys) {
+  std::cout << "PLAY CALLED." << std::endl;
   for (auto key : keys) {
     if (!this->datastore->GetSong(key)) {
       return util::Status("Song key " + std::to_string(key) +
@@ -69,7 +75,9 @@ Ytmusd::Ytmusd(std::string datastore_path) {
   return util::Status();
 }
 ::ytmusic::util::Status Ytmusd::Prev() {
-  if (this->now_playing > 0) {
+  std::cout << "PREV CALLED." << std::endl;
+  if (this->GetNowPlayingIndex() > 0) {
+    std::cout << this->GetNowPlayingIndex() - 1 << std::endl;
     this->now_playing = this->GetNowPlayingIndex() - 1;
   }
   this->Update();
@@ -83,26 +91,55 @@ Ytmusd::Ytmusd(std::string datastore_path) {
   this->audio.Play();
   return util::Status();
 }
+::ytmusic::util::Status Ytmusd::TogglePause() {
+  if (this->audio.IsPlaying()) {
+    return this->Pause();
+  } else {
+    return this->Continue();
+  }
+}
 
 ::ytmusic::util::Status Ytmusd::Stop() {
   this->queue.clear();
-  this->audio.ClearQueue();
-  this->audio.Skip();
+  this->audio.Flush();
   this->now_playing = -1;
   return util::Status();
 }
 std::string Ytmusd::GetDirectory() {
   return this->datastore->ToJSON();
 }
+std::string Ytmusd::GetStatus() {
+  rapidjson::Document d;
+  d.SetObject();
+  rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
+  rapidjson::Value queue(rapidjson::kArrayType);
+  for (int key : this->queue) {
+    rapidjson::Value val;
+    val.SetInt(key);
+    queue.PushBack(val, allocator);
+  }
+  d.AddMember("queue", queue, allocator);
+  rapidjson::Value now_playing;
+  now_playing.SetInt(this->GetNowPlayingIndex());
+  d.AddMember("now_playing", now_playing, allocator);
+  rapidjson::Value is_playing;
+  is_playing.SetBool(this->audio.IsPlaying());
+  d.AddMember("is_playing", is_playing, allocator);
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  d.Accept(writer);
+  return buffer.GetString();
+}
 Datastore* Ytmusd::GetDatastore() { return this->datastore.get(); }
 int Ytmusd::GetNowPlayingIndex() {
   return this->now_playing + this->audio.GetOffset();
 }
 void Ytmusd::Update() {
-  this->audio.ClearQueue();
-  this->audio.Skip();
+  this->audio.Flush();
+  std::cout << ">>  " << "Update called. now_playing = " << this->now_playing << std::endl;
   for (int i = this->now_playing; i < this->queue.size(); ++i) {
     auto song = this->datastore->GetSong(this->queue[i]);
+    std::cout << "\t>> Adding " << song->title() << " to audio queue." << std::endl;
     std::string song_url = kYoutubeUrlTemplate + song->yt_hash();
     this->audio.Enqueue(song_url);
   }
@@ -139,6 +176,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("PlaySongs\\(([0-9 ,]+)\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     re2::StringPiece arg_string;
     if (!RE2::FullMatch(request, pattern, &arg_string)) {
       return Error("Invalid request format.");
@@ -156,6 +194,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("PlayPlaylist\\((\\d+)\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     int key;
     if (!RE2::FullMatch(request, pattern, &key)) {
       return Error("Invalid request format.");
@@ -168,6 +207,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("Pause\\(\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     ::ytmusic::util::Status status = this->ytmusd->Pause();
     if (!status) {
       return Error(status.GetMessage());
@@ -176,7 +216,17 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("Continue\\(\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     ::ytmusic::util::Status status = this->ytmusd->Continue();
+    if (!status) {
+      return Error(status.GetMessage());
+    }
+    return Ack("");
+  });
+  dispatcher->RegisterHandler("TogglePause\\(\\)",
+                              [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
+    ::ytmusic::util::Status status = this->ytmusd->TogglePause();
     if (!status) {
       return Error(status.GetMessage());
     }
@@ -184,6 +234,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("Stop\\(\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     ::ytmusic::util::Status status = this->ytmusd->Stop();
     if (!status) {
       return Error(status.GetMessage());
@@ -192,6 +243,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("Next\\(\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     ::ytmusic::util::Status status = this->ytmusd->Next();
     if (!status) {
       return Error(status.GetMessage());
@@ -200,6 +252,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("Prev\\(\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     ::ytmusic::util::Status status = this->ytmusd->Prev();
     if (!status) {
       return Error(status.GetMessage());
@@ -208,6 +261,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("Enqueue\\((\\d+)\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     int key;
     if (!RE2::FullMatch(request, pattern, &key)) {
       return Error("Invalid request format.");
@@ -221,6 +275,7 @@ void YtmusdServer::InitHandlers() {
   dispatcher->RegisterHandler(
       "AddSong\\( *\"(.+)\" *, *\"(.+)\" *, *\"(.*)\" *, *\"(.*)\" *\\)",
       [this](std::string pattern, std::string request) {
+        std::unique_lock<std::mutex> lock(this->mut);
         std::string title, yt_hash, artist, album;
         if (!RE2::FullMatch(request, pattern, &title, &yt_hash, &artist,
                             &album)) {
@@ -235,6 +290,7 @@ void YtmusdServer::InitHandlers() {
       });
   dispatcher->RegisterHandler("SetSongTitle\\((\\d+), ?\"(.+)\"\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     int key;
     std::string value;
     if (!RE2::FullMatch(request, pattern, &key, &value)) {
@@ -249,6 +305,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("SetSongYTHash\\((\\d+), ?\"(.+)\"\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     int key;
     std::string value;
     if (!RE2::FullMatch(request, pattern, &key, &value)) {
@@ -263,6 +320,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("SetSongArtist\\((\\d+), ?\"(.+)\"\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     int key;
     std::string value;
     if (!RE2::FullMatch(request, pattern, &key, &value)) {
@@ -277,6 +335,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("SetSongAlbum\\((\\d+), ?\"(.+)\"\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     int key;
     std::string value;
     if (!RE2::FullMatch(request, pattern, &key, &value)) {
@@ -291,6 +350,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("DelSong\\((\\d+)\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     int key;
     if (!RE2::FullMatch(request, pattern, &key)) {
       return Error("Invalid request format.");
@@ -303,6 +363,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("AddPlaylist\\(\"(.+)\", *([0-9 ,]+)\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     std::string name;
     re2::StringPiece arg_string;
     if (!RE2::FullMatch(request, pattern, &name, &arg_string)) {
@@ -322,6 +383,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("SetPlaylistName\\((\\d+), ?(.+)\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     int key;
     std::string value;
     if (!RE2::FullMatch(request, pattern, &key, &value)) {
@@ -336,6 +398,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("SetPlaylistSongKeys\\((\\d+), *([0-9 ,]+)\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     int key;
     re2::StringPiece arg_string;
     if (!RE2::FullMatch(request, pattern, &key, &arg_string)) {
@@ -355,6 +418,7 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("DelPlaylist\\((\\d+)\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     int key;
     if (!RE2::FullMatch(request, pattern, &key)) {
       return Error("Invalid request format.");
@@ -368,7 +432,13 @@ void YtmusdServer::InitHandlers() {
   });
   dispatcher->RegisterHandler("GetDirectory\\(\\)",
                               [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
     return this->ytmusd->GetDirectory();
+  });
+  dispatcher->RegisterHandler("GetStatus\\(\\)",
+                              [this](std::string pattern, std::string request) {
+    std::unique_lock<std::mutex> lock(this->mut);
+    return this->ytmusd->GetStatus();
   });
 
   /*
