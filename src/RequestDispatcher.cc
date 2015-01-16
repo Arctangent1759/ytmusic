@@ -4,9 +4,6 @@
 #include <ctype.h>
 #include <re2/re2.h>
 
-using std::cout;
-using std::endl;
-
 namespace ytmusic {
 namespace util {
 

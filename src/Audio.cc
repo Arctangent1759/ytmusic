@@ -20,13 +20,16 @@ Audio::Audio() {
   this->started = false;
   this->player_thread = std::thread(&Audio::player, this);
   this->offset = 0;
-  std::cout << ">> AUDIO OFFSET RESET: " << this->offset << std::endl;
+  this->pipeline = gst_pipeline_new("test-pipeline");
 }
 
 void Audio::Enqueue(std::string url) { this->song_queue.push(url); }
 
 void Audio::Play() {
   if (this->started) {
+    while (!this->pipeline) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
     std::unique_lock<std::mutex> lk(this->pipeline_lock);
     GstStateChangeReturn ret =
         gst_element_set_state(this->pipeline, GST_STATE_PLAYING);
@@ -55,6 +58,7 @@ void Audio::Skip() {
   std::unique_lock<std::mutex> lk(this->pipeline_lock);
   GstBus* bus = gst_element_get_bus(this->pipeline);
   gst_bus_post(bus, gst_message_new_eos((GstObject*)bus));
+  gst_object_unref(bus);
   lk.unlock();
 }
 
@@ -72,7 +76,6 @@ void Audio::ClearQueue() {
     this->song_queue.pop();
   }
   this->offset = 0;
-  std::cout << ">> AUDIO OFFSET RESET: " << this->offset << std::endl;
 }
 
 Audio::~Audio() {
@@ -80,6 +83,7 @@ Audio::~Audio() {
   GstBus* bus = gst_element_get_bus(this->pipeline);
   gst_bus_post(bus, gst_message_new_eos((GstObject*)bus));
   this->running = false;
+  gst_object_unref(bus);
   this->player_thread.join();
 }
 
@@ -91,7 +95,8 @@ void Audio::player() {
   std::string song_url;
   ytmusic::URLDecoder decoder;
   this->started = true;
-  std::unique_lock<std::mutex> pipeline_lk(this->pipeline_lock, std::defer_lock);
+  std::unique_lock<std::mutex> pipeline_lk(this->pipeline_lock,
+                                           std::defer_lock);
   while (this->running) {
     if (!this->song_queue.empty()) {
       this->idle = false;
@@ -104,7 +109,6 @@ void Audio::player() {
       this->playing = true;
       play_song(this->pipeline);
       this->offset += 1;
-      std::cout << ">> AUDIO OFFSET INCREMENTED: " << this->offset << std::endl;
     } else {
       this->playing = false;
       this->idle = true;

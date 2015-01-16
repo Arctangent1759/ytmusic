@@ -20,7 +20,6 @@ Ytmusd::Ytmusd(std::string datastore_path) {
   this->datastore = std::unique_ptr<Datastore>(new Datastore(datastore_path));
 }
 ::ytmusic::util::Status Ytmusd::Play(int key) {
-  std::cout << "PLAY CALLED." << std::endl;
   if (!this->datastore->GetSong(key)) {
     return util::Status("Song key " + std::to_string(key) + " does not exist.");
   }
@@ -31,7 +30,6 @@ Ytmusd::Ytmusd(std::string datastore_path) {
   return util::Status();
 }
 ::ytmusic::util::Status Ytmusd::Play(std::vector<int> keys) {
-  std::cout << "PLAY CALLED." << std::endl;
   for (auto key : keys) {
     if (!this->datastore->GetSong(key)) {
       return util::Status("Song key " + std::to_string(key) +
@@ -75,9 +73,7 @@ Ytmusd::Ytmusd(std::string datastore_path) {
   return util::Status();
 }
 ::ytmusic::util::Status Ytmusd::Prev() {
-  std::cout << "PREV CALLED." << std::endl;
   if (this->GetNowPlayingIndex() > 0) {
-    std::cout << this->GetNowPlayingIndex() - 1 << std::endl;
     this->now_playing = this->GetNowPlayingIndex() - 1;
   }
   this->Update();
@@ -136,10 +132,8 @@ int Ytmusd::GetNowPlayingIndex() {
 }
 void Ytmusd::Update() {
   this->audio.Flush();
-  std::cout << ">>  " << "Update called. now_playing = " << this->now_playing << std::endl;
   for (int i = this->now_playing; i < this->queue.size(); ++i) {
     auto song = this->datastore->GetSong(this->queue[i]);
-    std::cout << "\t>> Adding " << song->title() << " to audio queue." << std::endl;
     std::string song_url = kYoutubeUrlTemplate + song->yt_hash();
     this->audio.Enqueue(song_url);
   }

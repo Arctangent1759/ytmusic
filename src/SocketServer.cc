@@ -10,6 +10,7 @@
 #include <iostream>
 #include <signal.h>
 #include <csignal>
+#include <re2/re2.h>
 
 namespace ytmusic {
 namespace util {
@@ -59,17 +60,49 @@ void SocketServer::Start() {
   close(sockfd);
 }
 
+std::string urlDecode(std::string &SRC) {
+  // Thanks tominko:
+  // http://stackoverflow.com/questions/154536/encode-decode-urls-in-c
+  std::string ret;
+  char ch;
+  int i, ii;
+  for (i = 0; i < SRC.length(); i++) {
+    if (int(SRC[i]) == 37) {
+      sscanf(SRC.substr(i + 1, 2).c_str(), "%x", &ii);
+      ch = static_cast<char>(ii);
+      ret += ch;
+      i = i + 2;
+    } else {
+      ret += SRC[i];
+    }
+  }
+  return (ret);
+}
+
 void SocketServer::ServeRequest(int sockfd) {
-  std::string request;
+  std::string raw_request, request;
+  bool is_http = false;
   char buf[2] = {'\n', '\0'};
   while (true) {
     read(sockfd, buf, 1);
     if (buf[0] == '\n') {
       break;
     }
-    request += buf;
+    raw_request += buf;
   }
-  dprintf(sockfd, "%s\n", this->handler->HandleRequest(request).c_str());
+  if (RE2::FullMatch(raw_request, "GET /(.+) HTTP/1\\.1.*", &request)) {
+    is_http = true;
+    request = urlDecode(request);
+  } else {
+    request = raw_request;
+  }
+  std::cout << request << std::endl;
+  if (is_http) {
+    dprintf(sockfd, "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\n%s\n\r\n",
+            this->handler->HandleRequest(request).c_str());
+  } else {
+    dprintf(sockfd, "%s\n", this->handler->HandleRequest(request).c_str());
+  }
   close(sockfd);
 }
 
