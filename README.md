@@ -26,7 +26,7 @@ protobuf-compiler
 
 They can be installed on Ubuntu 14.1 and onwards as follows:
 
-<code>
+```
 $ apt-get install gstreamer0.10-alsa
 $ apt-get install libgstreamer0.10-dev
 $ apt-get install libncurses5-dev
@@ -34,8 +34,7 @@ $ apt-get install libprotobuf-dev
 $ apt-get install libre2-dev
 $ apt-get install livestreamer
 $ apt-get install protobuf-compiler
-</code>
-
+```
 
 User Guide
 ----------
