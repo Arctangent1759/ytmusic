@@ -5,6 +5,7 @@
 #include <streambuf>
 
 #include "rapidjson/document.h"
+#include "SongFilter.h"
 
 namespace YTMClient {
 
@@ -33,10 +34,10 @@ void ClientDatastore::Refresh() {
   directory.Parse(directory_json.c_str());
   for (int i = 0; i < directory["songs"].Size(); ++i) {
     int key;
-    std::string title, artist, album;
-    song_list.emplace_back();
+    std::string title, artist, album, yt_hash;
     key = directory["songs"][i]["primary_key"].GetInt();
     title = directory["songs"][i]["title"].GetString();
+    yt_hash = directory["songs"][i]["yt_hash"].GetString();
     if (directory["songs"][i].HasMember("artist")) {
       artist = directory["songs"][i]["artist"].GetString();
     } else {
@@ -47,7 +48,7 @@ void ClientDatastore::Refresh() {
     } else {
       album = "";
     }
-    this->RegisterSong(key, title, artist, album);
+    this->RegisterSong(key, title, yt_hash, artist, album);
   }
   for (int i = 0; i < directory["playlists"].Size(); ++i) {
     std::vector<int> songs;
@@ -75,12 +76,41 @@ void ClientDatastore::Refresh() {
 
 int ClientDatastore::GetNumSongs() { return this->titles.size(); }
 std::vector<std::string> ClientDatastore::GetTitles() { return this->titles; }
+std::vector<std::string> ClientDatastore::GetTitles(SongFilter& f) {
+  std::vector<std::string> out;
+  for (auto& i : this->titles) {
+    if (f.Test(this->song_list[this->title_index[i]])) {
+      out.push_back(i);
+    }
+  }
+  return out;
+}
 std::vector<std::string> ClientDatastore::GetArtists() { return this->artists; }
 std::vector<std::string> ClientDatastore::GetAlbums() { return this->albums; }
 int ClientDatastore::GetNumPlaylists() { return this->playlists.size(); }
 std::vector<std::string> ClientDatastore::GetPlaylists() {
   return this->playlists;
 }
+int ClientDatastore::SongFirst(SongFilter& f) {
+  return this->SongAfter(-1, f);
+}
+int ClientDatastore::SongBefore(int index, SongFilter& f) {
+  for (int i = index - 1; i >= 0; --i) {
+    if (f.Test(this->song_list[this->title_index[this->titles[i]]])) {
+      return i;
+    }
+  }
+  return -1;
+}
+int ClientDatastore::SongAfter(int index, SongFilter& f) {
+  for (int i = index + 1; i < this->titles.size(); ++i) {
+    if (f.Test(this->song_list[this->title_index[this->titles[i]]])) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 
 std::vector<std::string> ClientDatastore::GetTitlesByPlaylist(
     std::string name) {
@@ -121,7 +151,7 @@ bool ClientDatastore::GetDirectory(std::string* result) {
   return this->client->GetDirectory(result);
 }
 
-void ClientDatastore::RegisterSong(int key, std::string title,
+void ClientDatastore::RegisterSong(int key, std::string title, std::string yt_hash,
                                    std::string artist, std::string album) {
   this->title_index[title] = this->song_list.size();
   this->album_index[album].push_back(this->song_list.size());
@@ -130,6 +160,7 @@ void ClientDatastore::RegisterSong(int key, std::string title,
   this->song_list.emplace_back();
   this->song_list.back().key = key;
   this->song_list.back().title = title;
+  this->song_list.back().yt_hash = yt_hash;
   this->song_list.back().artist = artist;
   this->song_list.back().album = album;
 }

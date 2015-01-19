@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <title>YTMChrome</title>
+    <style>
+      body {
+        font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
+        font-size: 100%;
+      }
+      span.red {
+        color:red;
+      }
+    </style>
+    <script src="popup.js"></script>
+  </head>
+  <body>
+    <div id="form">
+      <label>Title<span class='red'>*</span>: </label><input type="text" id="title"></input>
+    <br/>
+      <label>YouTube ID<span class='red'>*</span>: </label><input type="text" id="youtube_hash"></input>
+    <br/>
+      <label>Artist: </label><input type="text" id="artist"></input>
+    <br/>
+      <label>Album: </label><input type="text" id="album"></input>
+    <br/>
+    <br/>
+      <button id="submit_button">Add to Collection</button>
+    </div>
+  </body>
+</html>
+

@@ -1,10 +1,12 @@
 #ifndef CLIENTAPP_H
 #define CLIENTAPP_H
 
+#include <ncurses.h>
 #include <memory>
 
 #include "ClientDatastore.h"
 #include "YTMClient.h"
+#include "SongFilter.h"
 
 namespace YTMClient {
 
@@ -31,6 +33,8 @@ class ClientApp {
   void Header();
   void Footer();
   void Content();
+  std::string ReadFilter();
+  song_entry EditMenu(WINDOW* edit_window, song_entry e);
   std::unique_ptr<ClientDatastore> datastore;
   std::unique_ptr<YTMClient> client;
   int max_x;
@@ -42,6 +46,8 @@ class ClientApp {
   int state[max_menu];
   int max_selection[max_menu];
   YtmusAction action;
+  int counter;
+  SongFilter filter;
 };
 
 }  // namespace YTMClient

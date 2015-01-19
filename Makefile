@@ -21,7 +21,13 @@ RUNNERS := $(shell ls $(SRCDIR)/*-runner.$(SRCEXT) | sed s/\.$(SRCEXT)$$/.o/g | 
 
 OBJECTS_NO_RUNNERS := $(shell echo $(OBJECTS) $(PROTO_OBJECTS) | sed s/\ /\\n/g | grep -ve '-runner\.o$$')
 
-all: server client
+all: server client chrome
+
+chrome:
+	@mkdir -p $(BINDIR)
+	@google-chrome --pack-extension=chrome/ytm-chrome
+	@rm chrome/ytm-chrome.pem
+	@mv chrome/ytm-chrome.crx $(BINDIR)
 
 client: $(OBJECTS)
 	@echo " Linking..."
@@ -56,4 +62,4 @@ tester:
 ticket:
 	$(CC) $(CFLAGS) spikes/ticket.cc $(INC) $(LIB) -o bin/ticket
 
-.PHONY: clean proto
+.PHONY: clean proto chrome

@@ -9,8 +9,11 @@
 
 namespace YTMClient {
 
+class SongFilter;
+
 typedef struct song_entry_t {
   std::string title;
+  std::string yt_hash;
   std::string artist;
   std::string album;
   int key;
@@ -28,6 +31,7 @@ class ClientDatastore {
   void Refresh();
   int GetNumSongs();
   std::vector<std::string> GetTitles();
+  std::vector<std::string> GetTitles(SongFilter& f);
   std::vector<std::string> GetArtists();
   std::vector<std::string> GetAlbums();
   int GetNumPlaylists();
@@ -39,10 +43,13 @@ class ClientDatastore {
   song_entry GetSongInfo(int key);
   playlist_entry GetPlaylistInfo(std::string name);
   bool HasSong(std::string title);
+  int SongFirst(SongFilter& f);
+  int SongBefore(int i, SongFilter& f);
+  int SongAfter(int i, SongFilter& f);
 
  private:
   bool GetDirectory(std::string* result);
-  void RegisterSong(int key, std::string title, std::string artist,
+  void RegisterSong(int key, std::string title, std::string yt_hash, std::string artist,
                     std::string album);
   YTMClient* client;
   std::vector<song_entry> song_list;
