@@ -17,11 +17,17 @@ Installation
 YTMusic depends on the following:
 
 gstreamer0.10-alsa
+
 libgstreamer0.10-dev
+
 libncurses5-dev
+
 libprotobuf-dev
+
 libre2-dev
+
 livestreamer
+
 protobuf-compiler
 
 They can be installed on Ubuntu 14.1 and onwards as follows:
