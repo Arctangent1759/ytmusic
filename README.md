@@ -42,5 +42,17 @@ $ apt-get install livestreamer
 $ apt-get install protobuf-compiler
 ```
 
+To compile the project, run:
+
+```
+$ make
+```
+
+This will generate all executables for this project.
+
+Since we're not on the chrome store yet, you can install our chrome extension
+(located in chrome/ytm-chrome) by going to chrome://extensions/ enabling
+developer mode (upper right corner), and loading an unpacked extension.
+
 User Guide
 ----------
