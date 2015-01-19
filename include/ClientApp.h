@@ -34,7 +34,7 @@ class ClientApp {
   void Footer();
   void Content();
   std::string ReadFilter();
-  song_entry EditMenu(WINDOW* edit_window, song_entry e);
+  int EditMenu(WINDOW* edit_window, song_entry* e);
   std::unique_ptr<ClientDatastore> datastore;
   std::unique_ptr<YTMClient> client;
   int max_x;

@@ -272,11 +272,21 @@ void ClientApp::Content() {
       }
       switch (this->action) {
         case YtmusAction::OPEN: {
-          song_entry e = this->EditMenu(content, selected);
-          this->client->SetSongTitle(e.key, e.title);
-          this->client->SetSongYTHash(e.key, e.yt_hash);
-          this->client->SetSongArtist(e.key, e.artist);
-          this->client->SetSongAlbum(e.key, e.album);
+          song_entry e = selected;
+          int status = this->EditMenu(content, &e);
+          switch(status) {
+            case 0:
+              break;
+            case 1:
+              this->client->SetSongTitle(e.key, e.title);
+              this->client->SetSongYTHash(e.key, e.yt_hash);
+              this->client->SetSongArtist(e.key, e.artist);
+              this->client->SetSongAlbum(e.key, e.album);
+              break;
+            case 2:
+              this->client->DelSong(e.key);
+              break;
+          }
         } break;
         case YtmusAction::PLAY: {
           this->client->PlaySong(selected.key);
@@ -373,32 +383,34 @@ std::string ClientApp::ReadFilter() {
   return filter_str;
 }
 
-song_entry ClientApp::EditMenu(WINDOW* edit_window, song_entry e) {
+int ClientApp::EditMenu(WINDOW* edit_window, song_entry* e) {
   werase(edit_window);
   int state = 0;
   while (true) {
     wattrset(edit_window, state == 0 ? COLOR_PAIR(YtmusColor::HEADER) : COLOR_PAIR(YtmusColor::SELECTED) | A_BOLD);
     mvwprintw(edit_window, 1, 0, "Title:\t\t");
     wattrset(edit_window, state == 0 ? COLOR_PAIR(YtmusColor::HEADER) : COLOR_PAIR(YtmusColor::NORMAL));
-    mvwprintw(edit_window, 1, 20, " %s", e.title.c_str());
+    mvwprintw(edit_window, 1, 20, " %s", e->title.c_str());
     wattrset(edit_window, state == 1 ? COLOR_PAIR(YtmusColor::HEADER) : COLOR_PAIR(YtmusColor::SELECTED) | A_BOLD);
     mvwprintw(edit_window, 2, 0, "Youtube ID:\t");
     wattrset(edit_window, state == 1 ? COLOR_PAIR(YtmusColor::HEADER) : COLOR_PAIR(YtmusColor::NORMAL));
-    mvwprintw(edit_window, 2, 20, " %s", e.yt_hash.c_str());
+    mvwprintw(edit_window, 2, 20, " %s", e->yt_hash.c_str());
     wattrset(edit_window, state == 2 ? COLOR_PAIR(YtmusColor::HEADER) : COLOR_PAIR(YtmusColor::SELECTED) | A_BOLD);
     mvwprintw(edit_window, 3, 0, "Artist:\t\t");
     wattrset(edit_window, state == 2 ? COLOR_PAIR(YtmusColor::HEADER) : COLOR_PAIR(YtmusColor::NORMAL));
-    mvwprintw(edit_window, 3, 20, " %s", e.artist.c_str());
+    mvwprintw(edit_window, 3, 20, " %s", e->artist.c_str());
     wattrset(edit_window, state == 3 ? COLOR_PAIR(YtmusColor::HEADER) : COLOR_PAIR(YtmusColor::SELECTED) | A_BOLD);
     mvwprintw(edit_window, 4, 0, "Album:\t\t");
     wattrset(edit_window, state == 3 ? COLOR_PAIR(YtmusColor::HEADER) : COLOR_PAIR(YtmusColor::NORMAL));
-    mvwprintw(edit_window, 4, 20, " %s", e.album.c_str());
+    mvwprintw(edit_window, 4, 20, " %s", e->album.c_str());
     wattrset(edit_window, COLOR_PAIR(YtmusColor::NORMAL));
     switch (getch()) {
+      case 'd':
+        return 2;
       case 'h':
-        return e;
+        return 1;
       case 'q':
-        return e;
+        return 0;
       case 'k':
         if (state > 0) {
           --state;
@@ -418,16 +430,16 @@ song_entry ClientApp::EditMenu(WINDOW* edit_window, song_entry e) {
         noecho();
         switch (state) {
           case 0:
-            e.title = buffer;
+            e->title = buffer;
             break;
           case 1:
-            e.yt_hash = buffer;
+            e->yt_hash = buffer;
             break;
           case 2:
-            e.artist = buffer;
+            e->artist = buffer;
             break;
           case 3:
-            e.album = buffer;
+            e->album = buffer;
             break;
         }
         break;

@@ -56,3 +56,24 @@ developer mode (upper right corner), and loading an unpacked extension.
 
 User Guide
 ----------
+
+Run the RPC server, located in bin/server after compilation.
+Run the user client, located in bin/client after compilation.
+
+Until we implement custom keybindings, the controls are as follows:
+
+- j: Move down.
+- k: Move up.
+- e: Enqueue song.
+- p: Discard current queue and play song.
+- s: Stop.
+- P: Toggle play/pause.
+- h: Prev song.
+- l: Next song.
+- o: Edit song details. Opens new menu:
+  - j: Move down.
+  - k: Move up.
+  - l: Change song field.
+  - h: Exit menu and commit changes.
+  - q: Exit menu and don't commit changes.
+  - d: Exit menu and delete song.
