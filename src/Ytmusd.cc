@@ -312,7 +312,7 @@ void YtmusdServer::InitHandlers() {
     }
     return Ack("");
   });
-  dispatcher->RegisterHandler("SetSongArtist\\((\\d+), ?\"(.+)\"\\)",
+  dispatcher->RegisterHandler("SetSongArtist\\((\\d+), ?\"(.*)\"\\)",
                               [this](std::string pattern, std::string request) {
     std::unique_lock<std::mutex> lock(this->mut);
     int key;
@@ -327,7 +327,7 @@ void YtmusdServer::InitHandlers() {
     }
     return Ack("");
   });
-  dispatcher->RegisterHandler("SetSongAlbum\\((\\d+), ?\"(.+)\"\\)",
+  dispatcher->RegisterHandler("SetSongAlbum\\((\\d+), ?\"(.*)\"\\)",
                               [this](std::string pattern, std::string request) {
     std::unique_lock<std::mutex> lock(this->mut);
     int key;
